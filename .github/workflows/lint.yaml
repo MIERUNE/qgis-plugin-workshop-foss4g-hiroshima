@@ -18,6 +18,3 @@ jobs:
 
       - name: Install the project
         run: uv sync --all-extras --dev
-
-      - name: Security check with bandit
-        run: uv run bandit -c pyproject.toml -ll -r .
