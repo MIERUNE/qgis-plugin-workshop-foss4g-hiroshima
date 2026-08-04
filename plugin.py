@@ -22,9 +22,7 @@ class Plugin:
         assert toolbar is not None
         self.toolbar = toolbar
         self.toolbar.setObjectName(PLUGIN_NAME)
-        self.toolbar.setToolButtonStyle(
-            Qt.ToolButtonStyle.ToolButtonTextBesideIcon
-        )
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
     def add_action(
         self,
