@@ -1,0 +1,15 @@
+[project]
+name = "qgis-plugin-template"
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9,<3.10"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pyqt5>=5.15.11",
+    "pyright>=1.1.408",
+    "pytest>=8.4.2",
+    "ruff>=0.15.7",
+]
