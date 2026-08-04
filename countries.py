@@ -40,9 +40,7 @@ def countries_in_extent(
 
     layer_crs = layer.crs()
     if extent_crs.isValid() and extent_crs != layer_crs:
-        transform = QgsCoordinateTransform(
-            extent_crs, layer_crs, QgsProject.instance()
-        )
+        transform = QgsCoordinateTransform(extent_crs, layer_crs, QgsProject.instance())
         extent = transform.transformBoundingBox(extent)
 
     request = QgsFeatureRequest().setFilterRect(extent)

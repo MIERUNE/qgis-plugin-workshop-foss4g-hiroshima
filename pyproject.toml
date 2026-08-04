@@ -17,3 +17,9 @@ dev = [
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", ".claude"]
+
+[tool.ruff.lint]
+# Pin to Ruff's classic default rule set (pycodestyle errors + Pyflakes).
+# Newer Ruff versions enable more rules by default (N/FA/UP...), which would
+# otherwise flag the QGIS plugin folder name (N999) and other non-issues.
+select = ["E4", "E7", "E9", "F"]
