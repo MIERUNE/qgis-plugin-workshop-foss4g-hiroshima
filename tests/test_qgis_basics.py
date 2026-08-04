@@ -10,12 +10,12 @@ pytestmark = pytest.mark.usefixtures("qgis_plugin_path")
 
 class TestQgisBasic:
     def test_memory_layer_creation(self):
-        """メモリレイヤーが正しく作成できること"""
+        """A memory layer should be created correctly."""
         layer = QgsVectorLayer("Point?crs=EPSG:4326", "test", "memory")
         assert layer.isValid()
 
     def test_memory_layer_geometry_type(self):
-        """メモリレイヤーのジオメトリタイプが正しいこと"""
+        """A memory layer should have the correct geometry type."""
         point = QgsVectorLayer("Point?crs=EPSG:4326", "p", "memory")
         line = QgsVectorLayer("LineString?crs=EPSG:4326", "l", "memory")
         polygon = QgsVectorLayer("Polygon?crs=EPSG:4326", "pg", "memory")
@@ -25,7 +25,7 @@ class TestQgisBasic:
         assert polygon.wkbType() == Qgis.WkbType.Polygon
 
     def test_crs(self):
-        """CRSの生成と比較が正しく動作すること"""
+        """CRS creation and comparison should work correctly."""
         crs_4326 = QgsCoordinateReferenceSystem("EPSG:4326")
         crs_3857 = QgsCoordinateReferenceSystem("EPSG:3857")
 
@@ -34,7 +34,7 @@ class TestQgisBasic:
         assert crs_4326 != crs_3857
 
     def test_memory_layer_with_fields(self):
-        """フィールド付きメモリレイヤーが正しく作成できること"""
+        """A memory layer with fields should be created correctly."""
         layer = QgsVectorLayer(
             "Point?crs=EPSG:4326&field=name:string&field=value:integer",
             "test",

@@ -5,157 +5,84 @@ from plugin_dir.ui import (  # pyright: ignore[reportMissingImports]
     dialog as dialog_module,
 )
 from plugin_dir.ui.dialog import Dialog  # pyright: ignore[reportMissingImports]
-from qgis.PyQt.QtWidgets import (
-    QHBoxLayout,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-)
+from qgis.core import QgsCoordinateReferenceSystem, QgsRectangle
+from qgis.gui import QgsExtentGroupBox
+from qgis.PyQt.QtWidgets import QListWidget, QPushButton
 
 pytestmark = pytest.mark.usefixtures("qgis_plugin_path")
+
+WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
+
+
+def _result_texts(dialog: Dialog) -> list[str]:
+    return [dialog.resultList.item(i).text() for i in range(dialog.resultList.count())]
 
 
 class TestDialogInitial:
     def test_window_title(self):
-        """ウィンドウタイトルが期待値であること"""
+        """The window title should match the expected value."""
         dialog = Dialog()
-        assert dialog.windowTitle() == "Dialog"
+        assert dialog.windowTitle() == "Countries Checker"
 
     def test_button_labels(self):
-        """OK / キャンセル ボタンのラベルが期待値であること"""
+        """The Check countries / Close button labels should match the expected values."""
         dialog = Dialog()
         assert isinstance(dialog.pushButton_run, QPushButton)
-        assert isinstance(dialog.pushButton_cancel, QPushButton)
-        assert dialog.pushButton_run.text() == "OK"
-        assert dialog.pushButton_cancel.text() == "キャンセル"
+        assert isinstance(dialog.pushButton_close, QPushButton)
+        assert dialog.pushButton_run.text() == "Check countries"
+        assert dialog.pushButton_close.text() == "Close"
 
-    def test_line_edit_properties(self):
-        """lineEdit の型・最小幅・初期テキストが期待値であること"""
+    def test_widgets_exist(self):
+        """The extent input and result list widgets should exist."""
         dialog = Dialog()
-        assert isinstance(dialog.lineEdit, QLineEdit)
-        assert dialog.lineEdit.minimumWidth() >= 300
-        assert dialog.lineEdit.text() == ""
+        assert isinstance(dialog.extentGroupBox, QgsExtentGroupBox)
+        assert isinstance(dialog.resultList, QListWidget)
 
-    def test_layout_structure(self):
-        """ルートレイアウトが QVBoxLayout かつボタン群が QHBoxLayout に格納されていること"""
+
+class TestDialogCheckCountries:
+    def test_ok_click_lists_japan(self):
+        """Clicking Check countries on an extent over Japan should list Japan."""
         dialog = Dialog()
-        root_layout = dialog.layout()
-        assert root_layout is not None
-        assert isinstance(root_layout, QVBoxLayout)
-
-        button_layout = None
-        for i in range(root_layout.count()):
-            item = root_layout.itemAt(i)
-            assert item is not None
-            sub_layout = item.layout()
-            if isinstance(sub_layout, QHBoxLayout):
-                button_layout = sub_layout
-                break
-        assert button_layout is not None
-
-        button_widgets = []
-        for i in range(button_layout.count()):
-            item = button_layout.itemAt(i)
-            assert item is not None
-            widget = item.widget()
-            if widget is not None:
-                button_widgets.append(widget)
-        assert dialog.pushButton_run in button_widgets
-        assert dialog.pushButton_cancel in button_widgets
-
-
-class TestDialogOkButton:
-    def test_ok_click_invokes_message_box_once(self, monkeypatch: pytest.MonkeyPatch):
-        """OK クリックで QMessageBox.information が一度だけ呼ばれること"""
-        mock_info = MagicMock()
-        monkeypatch.setattr(dialog_module.QMessageBox, "information", mock_info)
-
-        dialog = Dialog()
-        dialog.lineEdit.setText("hello")
+        dialog.extentGroupBox.setOutputExtentFromUser(
+            QgsRectangle(138.0, 34.0, 141.0, 37.0), WGS84
+        )
         dialog.pushButton_run.click()
+        assert "Japan" in _result_texts(dialog)
 
-        assert mock_info.call_count == 1
-
-    def test_ok_click_passes_line_edit_text(self, monkeypatch: pytest.MonkeyPatch):
-        """QMessageBox.information の引数に lineEdit のテキストが渡ること"""
-        mock_info = MagicMock()
-        monkeypatch.setattr(dialog_module.QMessageBox, "information", mock_info)
-
+    def test_check_re_run_replaces_results(self):
+        """Re-running the search should clear the previous results."""
         dialog = Dialog()
-        dialog.lineEdit.setText("hello")
-        dialog.pushButton_run.click()
+        dialog.extentGroupBox.setOutputExtentFromUser(
+            QgsRectangle(138.0, 34.0, 141.0, 37.0), WGS84
+        )
+        dialog.check_countries()
+        assert "Japan" in _result_texts(dialog)
 
-        assert mock_info.call_args is not None
-        assert mock_info.call_args.args[2] == "hello"
+        dialog.extentGroupBox.setOutputExtentFromUser(
+            QgsRectangle(-140.0, -30.0, -139.0, -29.0), WGS84
+        )
+        dialog.check_countries()
+        assert "Japan" not in _result_texts(dialog)
 
-    def test_ok_click_with_empty_text(self, monkeypatch: pytest.MonkeyPatch):
-        """空文字列状態でもモックは空文字を引数として呼ばれること"""
-        mock_info = MagicMock()
-        monkeypatch.setattr(dialog_module.QMessageBox, "information", mock_info)
+    def test_empty_extent_warns(self, monkeypatch: pytest.MonkeyPatch):
+        """With no extent set, it should warn and not search."""
+        mock_warn = MagicMock()
+        monkeypatch.setattr(dialog_module.QMessageBox, "warning", mock_warn)
 
-        dialog = Dialog()
-        dialog.lineEdit.setText("")
-        dialog.pushButton_run.click()
+        dialog = Dialog()  # no canvas -> the initial extent is empty
+        dialog.check_countries()
 
-        assert mock_info.call_count == 1
-        assert mock_info.call_args is not None
-        assert mock_info.call_args.args[2] == ""
-
-    def test_get_and_show_input_text_direct_call(self, monkeypatch: pytest.MonkeyPatch):
-        """get_and_show_input_text を直接呼んでもモックが期待引数で呼ばれること"""
-        mock_info = MagicMock()
-        monkeypatch.setattr(dialog_module.QMessageBox, "information", mock_info)
-
-        dialog = Dialog()
-        dialog.lineEdit.setText("foo")
-        dialog.get_and_show_input_text()
-
-        assert mock_info.call_count == 1
-        assert mock_info.call_args is not None
-        assert mock_info.call_args.args[2] == "foo"
+        assert mock_warn.call_count == 1
+        assert dialog.resultList.count() == 0
 
 
-class TestDialogCancelButton:
-    def test_cancel_click_invokes_reject_once(self, monkeypatch: pytest.MonkeyPatch):
-        """キャンセルボタンのクリックで reject() が一度だけ呼ばれること"""
+class TestDialogCloseButton:
+    def test_close_click_invokes_reject_once(self, monkeypatch: pytest.MonkeyPatch):
+        """Clicking Close should invoke reject() exactly once."""
         dialog = Dialog()
         mock_reject = MagicMock()
         monkeypatch.setattr(dialog, "reject", mock_reject)
 
-        dialog.pushButton_cancel.click()
+        dialog.pushButton_close.click()
 
         assert mock_reject.call_count == 1
-
-    def test_on_cancel_clicked_direct_call(self, monkeypatch: pytest.MonkeyPatch):
-        """_on_cancel_clicked を直接呼んでも reject() が起動すること"""
-        dialog = Dialog()
-        mock_reject = MagicMock()
-        monkeypatch.setattr(dialog, "reject", mock_reject)
-
-        dialog._on_cancel_clicked(checked=False)
-
-        assert mock_reject.call_count == 1
-
-
-class TestDialogSignalWiring:
-    def test_run_signal_connected_to_slot(self, monkeypatch: pytest.MonkeyPatch):
-        """pushButton_run.clicked が get_and_show_input_text に結線されていること"""
-        mock_slot = MagicMock()
-        # Dialog.__init__ 内の self.get_and_show_input_text 評価が
-        # クラス属性経由で関数オブジェクトを解決するため、インスタンス化前にパッチする。
-        monkeypatch.setattr(Dialog, "get_and_show_input_text", mock_slot)
-
-        dialog = Dialog()
-        dialog.pushButton_run.click()
-
-        assert mock_slot.call_count == 1
-
-    def test_cancel_signal_connected_to_slot(self, monkeypatch: pytest.MonkeyPatch):
-        """pushButton_cancel.clicked が _on_cancel_clicked に結線されていること"""
-        mock_slot = MagicMock()
-        monkeypatch.setattr(Dialog, "_on_cancel_clicked", mock_slot)
-
-        dialog = Dialog()
-        dialog.pushButton_cancel.click()
-
-        assert mock_slot.call_count == 1

@@ -6,7 +6,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 from .ui.dialog import Dialog
 
-PLUGIN_NAME = "sample"
+PLUGIN_NAME = "Countries Checker"
 
 
 class Plugin:
@@ -50,7 +50,7 @@ class Plugin:
         return action
 
     def initGui(self):
-        # メニュー設定
+        # Menu setup
         self.add_action(
             icon_path=None,
             text="Countries Checker",
@@ -65,5 +65,5 @@ class Plugin:
         del self.toolbar
 
     def show_dialog(self):
-        self.dialog = Dialog()
+        self.dialog = Dialog(self.iface)
         self.dialog.show()

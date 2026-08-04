@@ -1,4 +1,4 @@
-# プラグインのエントリーポイント
+# Plugin entry point
 
 
 def classFactory(iface):

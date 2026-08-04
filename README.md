@@ -1,30 +1,34 @@
-# qgis-plugin-template
+# Countries Checker
 
-QGIS3.x プラグイン開発のひな形
+A QGIS 3.x plugin that lists the countries falling within a given map extent.
 
 ## What is this?
 
-QGISプラグインの開発を始めるためのひな形です
+The plugin adds a **Countries Checker** dialog where you specify a map extent
+(type coordinates, use the current map extent, or draw on the canvas) and get
+back the list of countries that intersect it. Country geometries come from the
+bundled `data/ne_countries.gpkg` (Natural Earth, `NAME_LONG` field).
 
-- PythonコードによるUI実装
-- ProcessingAlgorithmのボイラープレート
-- 自動テスト
-- 静的型チェック
+It also serves as a QGIS plugin template with:
+
+- A UI implemented in Python code
+- Automated tests
+- Static type checking
 
 ## Preparation
 
-以下の手順で、型チェックが可能となり、VSCode上でQGIS Python APIのコード補完が有効になります。
+The steps below enable type checking and QGIS Python API autocompletion in VSCode.
 
 1. `uv sync`
-2. VSCodeでQGIS Python APIのコード補完を有効にする
-    1. `pyrightconfig.json` の `extraPaths` を自身のQGISインストール先に合わせて編集する
+2. Enable QGIS Python API autocompletion in VSCode
+    1. Edit `extraPaths` in `pyrightconfig.json` to match your QGIS installation
         - **macOS**: `/Applications/QGIS.app/Contents/Resources/python3.XX/site-packages`
         - **Windows (OSGeo4W)**: ??
-3. VSCodeのPythonインタプリタを、`uv sync`で構築された仮想環境のPythonに設定する
+3. Set the VSCode Python interpreter to the virtual environment built by `uv sync`
 
-## テストの実行
+## Running the tests
 
-テストはQGIS Pythonランタイムに依存するため、Dockerを利用して実行します:
+The tests depend on the QGIS Python runtime, so run them with Docker:
 
 ```bash
 docker run --rm \
@@ -38,39 +42,41 @@ docker run --rm \
   "
 ```
 
-### Processingアルゴリズムのテスト
-
-- `native:xxx`はテスト可能
-- `qgis:xxx`はおそらくテスト可能
-- `gdal:xxx`はテスト不可能
-
-> Recommend: 頑張りすぎない
-
 ## Tips
 
-### Pythonバージョン
+### Python version
 
-macOSのQGIS3.40はPython3.9を内臓していて、これが現状最も古いPythonバージョンです。このバージョンのQGISのサポートが必要なら、3.9のシンタックスで実装する必要があります。
+QGIS 3.40 on macOS bundles Python 3.9, which is currently the oldest Python
+version in play. If you need to support that QGIS build, implement using
+Python 3.9 syntax.
 
-### PyQt5/6の両対応
+### PyQt5 / PyQt6 compatibility
 
-- このリポジトリで構築される開発環境は、PyQt5をベースとしています。これはQGISに内臓されているPythonスタブが依然としてPyQt5に依存しているためです。
-- ほとんどのAPIはPyQt5/6で共通ですが、一部で相違があります。なので、PyQt5のAPIで実装するとPyQt6環境で動作しなくなることがあります（逆も同様）。どちらの環境でも動作させる必要がある場合は必要に応じて互換レイヤーを導入しましょう。
+- The development environment built by this repository is based on PyQt5,
+  because the Python stubs bundled with QGIS still depend on PyQt5.
+- Most APIs are shared between PyQt5 and PyQt6, but a few differ. Code written
+  against the PyQt5 API can therefore break under PyQt6 (and vice versa). When
+  you need to support both, introduce a compatibility layer as needed.
 
-### 型チェック
+### Type checking
 
-QGIS Python APIの型定義は完全ではないので、適宜`# type: ignore`を利用して型チェックを回避せざるを得ませんが、型定義が存在する部分については積極的に型チェックを有効にして、コードの品質を保ちましょう。
+The QGIS Python API type definitions are incomplete, so occasionally you have to
+suppress checks with `# pyright: ignore[<specific-rule>]`. Where type
+definitions exist, keep type checking on to preserve code quality.
 
-#### 一部の型が当たらない問題
+#### Some types not resolving
 
-QGISが内蔵しているPythonの型スタブに問題があり、`QAction`など一部のクラスに型が当たりません。
+There is an issue with the Python type stubs bundled with QGIS: some classes,
+such as `QAction`, do not resolve their types.
 
-### relative import
+### Relative imports
 
-- 関心ごとに応じて、モジュールを分割しましょう（例：`ui`モジュール）
-- `relative import`の利用を推奨します：以下のような絶対パスによるインポートは[Plugin Reloader](https://plugins.qgis.org/plugins/plugin_reloader/)で変更が反映されなくなることがあります（[Issue #16](https://github.com/MIERUNE/qgis-plugin-template/issues/16)）
+- Split modules by concern (e.g. the `ui` module).
+- Prefer relative imports: absolute imports like the one below can stop
+  [Plugin Reloader](https://plugins.qgis.org/plugins/plugin_reloader/) from
+  picking up changes ([Issue #16](https://github.com/MIERUNE/qgis-plugin-template/issues/16)).
 
 ```python
-from child import Child # not good
-from .child import Child # better
+from child import Child   # not good
+from .child import Child  # better
 ```

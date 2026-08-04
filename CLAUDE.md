@@ -1,8 +1,12 @@
 # CLAUDE.md
 
-## プロジェクト概要
+## Project overview
 
-### テスト（Docker 必須）
+Countries Checker: a QGIS plugin that lists the countries falling within a
+given map extent. Country data ships in `data/ne_countries.gpkg` (layer
+`ne_countries`, `NAME_LONG` field).
+
+### Testing (Docker required)
 
 ```bash
 docker run --rm \
@@ -16,30 +20,42 @@ docker run --rm \
   "
 ```
 
-## コーディング規約
+## Coding conventions
 
-### プラグイン内 import
+### Imports inside the plugin
 
-- プラグイン内モジュール参照は relative import を使う：`from .ui.dialog import Dialog`。
-- 絶対 import（`from ui.dialog import Dialog`）は Plugin Reloader の変更検知を壊すことがある（[Issue #16](https://github.com/MIERUNE/qgis-plugin-template/issues/16)）ため使わない。
-- テスト内ではルールが反転する。`conftest.py` が登録する仮想パッケージ経由で `from plugin_dir.processing.provider import SampleProvider` のように書く。プラグインを top-level モジュールとして import しないこと（`processing/` 等の名前が QGIS の組込モジュールと衝突する）。
+- Reference in-plugin modules with relative imports: `from .ui.dialog import Dialog`.
+- Do not use absolute imports (`from ui.dialog import Dialog`); they can break
+  Plugin Reloader's change detection
+  ([Issue #16](https://github.com/MIERUNE/qgis-plugin-template/issues/16)).
+- The rule is inverted inside tests. Use the virtual package that `conftest.py`
+  registers, e.g. `from plugin_dir.ui.dialog import Dialog` or
+  `from plugin_dir.countries import countries_in_extent`. Do not import the
+  plugin as a top-level module (subpackage names such as `ui/` can collide with
+  QGIS built-in modules).
 
-### 型チェック方針
+### Type-checking policy
 
-- 抑制が必要な場合は `# pyright: ignore[<具体的なルール名>]` を使う（例：`# pyright: ignore[reportAttributeAccessIssue]`）。
-- 包括的な `# type: ignore` は使わない。
+- When suppression is required, use `# pyright: ignore[<specific-rule>]`
+  (e.g. `# pyright: ignore[reportAttributeAccessIssue]`).
+- Do not use blanket `# type: ignore`.
 
-### Processing アルゴリズムのテスト
+### Testing Processing algorithms
 
-- `native:*` はテスト可能。
-- `qgis:*` は概ねテスト可能。
-- `gdal:*` はこの環境ではテスト不可。試みない。
-- `processing.Processing.initialize()` は呼ばない（GUI 部品を読み込み、xvfb 下で segfault することがある）。プロバイダは `QgsApplication.processingRegistry()` に直接登録する（`conftest.py` の `qgis_plugin_path` フィクスチャ参照）。
+- `native:*` is testable.
+- `qgis:*` is mostly testable.
+- `gdal:*` is not testable in this environment. Do not attempt it.
+- Do not call `processing.Processing.initialize()` (it loads GUI components and
+  can segfault under xvfb). Register providers directly on
+  `QgsApplication.processingRegistry()` (see the `qgis_plugin_path` fixture in
+  `conftest.py`).
 
-### プラグインのライフサイクル
+### Plugin lifecycle
 
-- `Plugin.initGui` で QGIS に追加したもの（アクション、ツールバー、プロバイダ等）は、必ず `Plugin.unload` で対応する remove を行う。
-- 追加・削除のべき等性をフラグで担保する。プロバイダ登録のリファレンス実装：
+- Anything added to QGIS in `Plugin.initGui` (actions, toolbars, providers,
+  etc.) must be removed with the matching call in `Plugin.unload`.
+- Guarantee idempotency of add/remove with a flag. Reference pattern for
+  registering something globally (e.g. a Processing provider):
 
   ```python
   if registry.providerById(self._provider.id()) is None:
@@ -47,11 +63,16 @@ docker run --rm \
       self._provider_added = True
   ```
 
-  `unload` 側では `self._provider_added` を見てから削除する。新たに global 登録を追加するときも同じパターンを踏襲する。
+  On the `unload` side, check `self._provider_added` before removing. Follow the
+  same pattern whenever you add a new global registration.
 
-### ディレクトリと命名
+### Directories and naming
 
-- ルート直下が QGIS にとってのプラグインパッケージそのもの。新しい関心領域は既存のサブパッケージに無理に押し込まず、兄弟ディレクトリを追加する（例：カスタム式なら `expressions/`）。
-- ファイル／モジュールは `snake_case.py`、クラスは `PascalCase`、関数・メソッドは `snake_case`、定数は `UPPER_SNAKE_CASE`。
-- Qt のオーバーライドメソッド（`initAlgorithm`、`processAlgorithm`、`initGui`、`unload` 等）は Qt 側の casing を維持する。
-- テストファイルは `test_<対象>.py`、テストクラスは `TestXxx`。
+- The repository root is the QGIS plugin package itself. For a new area of
+  concern, add a sibling directory rather than forcing it into an existing
+  subpackage (e.g. `expressions/` for custom expressions).
+- Files/modules are `snake_case.py`, classes are `PascalCase`, functions and
+  methods are `snake_case`, constants are `UPPER_SNAKE_CASE`.
+- Keep Qt's casing for overridden Qt methods (`initAlgorithm`,
+  `processAlgorithm`, `initGui`, `unload`, etc.).
+- Test files are `test_<target>.py`, test classes are `TestXxx`.
