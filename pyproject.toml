@@ -8,8 +8,12 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8"
     "pyqt5>=5.15.11",
     "pyright>=1.1.408",
     "pytest>=8.4.2",
     "ruff>=0.15.7",
 ]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", ".claude"]
