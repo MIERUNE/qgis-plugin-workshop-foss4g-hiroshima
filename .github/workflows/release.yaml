@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  PLUGIN_NAME: foss4gcountrieschecker
+  PLUGIN_NAME: foss4g_countries_checker
 jobs:
   release:
     runs-on: ubuntu-latest
