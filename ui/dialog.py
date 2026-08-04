@@ -70,10 +70,8 @@ class Dialog(QDialog):
 
         self.resultList.clear()
 
-        # --- WORKSHOP DEMO: intentionally insecure, remove during the workshop ---
-        # Bandit flags this as B307 (use of eval). eval() needs a string, so we
-        # pass one here; it runs without error but still trips the security check.
-        eval("str(extent)")
+        # --- WORKSHOP DEMO ---
+        # eval("str(extent)")
         # --- END WORKSHOP DEMO ---
 
         if extent is None or extent.isEmpty():

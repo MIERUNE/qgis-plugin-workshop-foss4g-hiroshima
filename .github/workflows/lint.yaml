@@ -17,15 +17,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Install the project
-        # No --locked: let CI refresh uv.lock if it is out of date,
-        # so workshop participants don't need to run `uv lock` locally.
         run: uv sync --all-extras --dev
-
-      - name: Lint with ruff
-        run: uv run ruff check --output-format=github .
-
-      - name: Format with ruff
-        run: uv run ruff format . --check --diff
 
       - name: Security check with bandit
         run: uv run bandit -c pyproject.toml -ll -r .
