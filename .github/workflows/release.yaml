@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  PLUGIN_NAME: qgis-plugin-template
+  PLUGIN_NAME: foss4gcountrieschecker
 jobs:
   release:
     runs-on: ubuntu-latest
