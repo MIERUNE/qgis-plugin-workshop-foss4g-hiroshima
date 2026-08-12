@@ -5,7 +5,7 @@ about=List the countries that fall within a given map extent. This is a sample p
 qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
 # Version will be updated with release tag on Github workflow
-version={{PLUGIN_VERSION}}
+version=0.1
 
 #Plugin main icon
 icon=imgs/icon.png
