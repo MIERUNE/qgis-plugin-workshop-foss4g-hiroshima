@@ -70,9 +70,6 @@ class Dialog(QDialog):
 
         self.resultList.clear()
 
-        # --- WORKSHOP DEMO ---
-        eval("str(extent)")
-        # --- END WORKSHOP DEMO ---
 
         if extent is None or extent.isEmpty():
             QMessageBox.warning(
