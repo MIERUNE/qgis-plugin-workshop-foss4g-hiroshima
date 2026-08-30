@@ -69,3 +69,5 @@ class Plugin:
     def show_dialog(self):
         self.dialog = Dialog(self.iface)
         self.dialog.show()
+
+# aaaaS
